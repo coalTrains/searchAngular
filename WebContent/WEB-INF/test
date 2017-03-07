@@ -1,0 +1,153 @@
+		
+		<script type = "text/javascript" src = "js/jquery-3.1.1.js" ></script> 
+		 <script>		
+		
+		/* Stampa risultati  cambia nome */
+		var printUsers = function(users) {
+			$('#list').empty();
+			$.each(users, function (index,userBean) {
+				$('#list').append(
+					$("<tr class='rows' id='index'>"+
+				  		"<td class='uId' id='uId_" + userBean.id + "' >" + userBean.id + "</td>"+
+				  		"<td class='uName' id='uName_"+userBean.id+"' data-name='"+ userBean.nome +"'>" + userBean.nome + "</td>"+
+				  		"<td class='uSurname' id='uSurname_"+userBean.id+"' data-surname='"+ userBean.cognome +"'>" + userBean.cognome +"</td>"+
+				  		"<td class='uDate' id='uDate_"+userBean.id+"' data-date='"+ userBean.data +"'>" + userBean.data + "</td>"+
+				  		"<td ><form action='ServletUser' method='GET'><input type='button' value='Modifica' data-id='"+userBean.id+"' class='modifica' id='modifica_"+userBean.id+"'/></form></td>"+
+				  		"<td><form action='ServletUser' method='POST'><input type='button' value='Elimina' data-id='"+userBean.id+"' class='elimina' id='elimina_"+userBean.id+"'/></form></td>"+
+				  	  "</tr>"));
+					$('#list tr:last').attr("id", userBean.id);
+			});
+ 			$('#linkAggiungi').insertAfter('#list');
+		};
+		
+		$( function() {
+			
+			/* Ricerca */
+			$('#formSubmit').on('click', function() {
+				$.ajax({
+					type: "get",
+					url : "ServletUser",
+					dataType: 'json',
+					data:{
+						nome : $('#formName').val(), cognome : $('#formSurname').val(), data : $('#formDate').val(), action : "search"
+					},
+					timeout: 30000, // 30 secondi
+					
+					success: printUsers,
+					error: function() {
+							alert("Si è verificato un errore nella connessione con il server");
+						   }
+			   });                  
+		   });
+		 	$('#formSubmit').trigger('click'); 
+			$('#linkAggiungi').insertAfter('#list');
+			
+			/* Form Modifica utente */
+			$('#list').one('click','.modifica', function(){
+				var index = $(this).data('id');
+				var name=$("#"+index+"").children(".uName").data("name");
+				var surname=$("#"+index+"").children(".uSurname").data("surname");
+				var date=$("#"+index+"").children(".uDate").data("date");
+				/* alternativa1: var index = $(this).data('id'); */
+				/* alternativa2: var index = $(this).attr('data-id'); */
+				
+				$('.search').prepend(
+				$('<div id="modUser">  <h2>Modifica utente</h2>'+
+			
+					'<form name="form" id="modForm" >'+
+						'Nome:  <input type="text" id="modName" name="nome" value="'+name+'"/><br><br>'+ 
+						'Cognome:  <input type="text" id="modSurname" name="cognome" value="'+ surname +'" /><br><br>'+
+						'Data di nascita(aaaa-mm-gg):  <input type="text" id="modDate" name="data" value="'+ date +'" /><br><br>'+
+						'<input type="button" id="doModifica" value="Invia modifica" />'+	 	
+				    '</form><br> </div>'
+				));
+				
+				/* Do Modifica */
+				$("#modUser").on('click' ,'#doModifica', function(){
+					
+					$.ajax({
+						type:"post",
+						url: "ServletUser",
+						dataType: "json",
+						data:{
+							action : "update", id : index , nome : $('#modName').val(), cognome : $('#modSurname').val(), data : $('#modDate').val()
+						},
+						timeout: 5000, // 5 secondi
+						
+						success: function(user) {
+							$('#form').append("<p>Utente modificato: Id: "+user.id+", nome: "+user.nome+", cognome: "+user.cognome+", data di nascita: "+user.data+"</p>");					
+							$('#formSubmit').delay(5000).trigger('click'); 
+							$('#modUser').remove();
+						}, 
+							
+						error: function() {
+								 alert("Si è verificato un errore nella connessione con il server");
+							   }	
+					});
+				});
+			});	
+		
+			/* Elimina */
+			$('#list').on('click' ,'.elimina', function() {
+				var index = $(this).data('id');
+				
+				$.ajax({
+					type:"post",
+					url: "ServletUser",
+					dataType: "json",
+					data:{
+						action : "delete", id : index
+					},
+					timeout: 9000, // 9 secondi
+					
+					success: function(deletedUser){
+						$('.search').append('<p>Utente eliminato: ID: '+deletedUser.id+'</p>');
+						$('#formSubmit').delay(5000).trigger('click'); 
+					},
+						
+					error: function() {
+							 alert("Si è verificato un errore nella connessione con il server");
+						   }	
+				});
+			});
+			
+			/* Form aggiungi nuovo utente */
+			$('#add').on('click', function(){
+				$('.search').prepend(
+				$('<div id="newUser">  <h2>Aggiungi nuovo utente</h2>'+
+			
+					'<form name="form" id="addForm" >'+
+						'Nome:  <input type="text" id="addName" name="nome"/><br><br>'+ 
+						'Cognome:  <input type="text" id="addSurname" name="cognome"/><br><br>'+
+						'Data di nascita(aaaa-mm-gg):  <input type="text" id="addDate" name="data"/><br><br>'+
+						'<input type="button" id="doAggiungi" value="Aggiungi"/>'+	 	
+				    '</form><br> </div>'
+				));
+				
+				/* Do aggiungi */
+				$('#newUser').on('click','#doAggiungi', function() {
+					
+					$.ajax({
+						type: "post",
+						url : "ServletUser",
+						dataType: 'json',
+						data:{
+							 "action" : "add" , "name" : $("#addName").val(), "surname" : $("#addSurname").val(), "date" : $("#addDate").val() 
+						},
+						timeout: 5000, // 5 secondi
+							
+						success: function(newUser){
+						 	$('.search').delay(3000).append('<p>Utente aggiunto: ID: '+newUser.id+'  nome: '+$("#addName").val()+', cognome: '+$("#addSurname").val()+', data: '+$("#addDate").val()+' </p>'); 
+							$('#formSubmit').trigger('click'); 
+ 							$('#newUser').remove();
+						},
+						
+						error:  function() {
+							 alert("Si è verificato un errore nella connessione con il server");
+						   }	
+				   });
+					
+				});	
+			});
+		});
+		</script> 

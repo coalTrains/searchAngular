@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+
+<configuration status="error">  
+  										 								
+	<appenders>
+
+		<Console name="Console-err" target="SYSTEM_ERR">
+    	    <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+    	</Console>
+
+		<Console name="Sysout" target="SYSTEM_OUT">
+        	<PatternLayout pattern="%m%n"/>
+    	</Console>
+    	
+     	<RollingFile name="RollingFile" 
+    			fileName="${sys:catalina.base}\logs\Ricerca.log"
+            	filePattern="${sys:catalina.base}\logs\Ricerca.%d{yyyy-MM-dd-hh-mm}.log.gz">  
+                                 
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss,SSS} [%X{remoteIP}] [%X{sessionid}] [%X{connectionId}] %-5p %c - %m%n</Pattern>
+            </PatternLayout>
+            
+            <Policies>
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="10"/>
+            
+        </RollingFile>
+    	
+	</appenders>
+
+	<loggers>
+	
+		<Logger name="test.ServletUser" level="debug" additivity="true" >
+    		<appenderRef ref="Sysout" />
+    	</Logger>
+	
+		<Logger name="test.UserManager" level="debug" additivity="true" >
+    		<appenderRef ref="Sysout" />
+    	</Logger>
+    	
+    	<Logger name="test.DbPoolManager" level="debug" additivity="true" >
+    		<appenderRef ref="RollingFile" />
+    	</Logger>
+    	
+    	<Logger name="test.MyExceptionFilter" level="debug" additivity="true" >
+    		<appenderRef ref="Sysout" />
+    	</Logger>
+    	
+    	<root >
+<!--         	<appenderRef ref="Console-err" level="error"/>
+        	<appenderRef ref="Sysout" level="error"/> -->	
+    	</root>
+    	      	 
+	</loggers>
+	
+</configuration>
